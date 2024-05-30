@@ -5,3 +5,9 @@ export const getAllStudents = () =>
 
 export const deleteStudentById = (id) => 
     request.delete(`/api/students/${id}`)
+
+export const updateStudents = (id, data) =>
+    request.put(`/api/students/${id}`, data)
+
+export const addStudent = (data) =>
+    request.post(`/api/students/create`, data)

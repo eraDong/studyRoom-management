@@ -15,4 +15,6 @@ export const updateStudyRoom = (id, data) =>
 export const addStudyRoom = (data) =>
     request.post(`/api/studyrooms/create`, data)
 
+export const reserveStudyRoom = async (id, reservationData) => 
+    request.post(`/api/studyrooms/reserve/${id}`, reservationData)
 
