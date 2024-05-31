@@ -4,6 +4,7 @@ import com.yxy.studyroomserver.model.StudyRoomModel;
 import com.yxy.studyroomserver.service.StudyRoomService;
 import com.yxy.studyroomserver.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,6 @@ public class StudyRoomController {
         private int studentId;
 
         // Getters and Setters
-
         public int getStudentId() {
             return studentId;
         }
@@ -34,24 +34,33 @@ public class StudyRoomController {
     }
 
     @PostMapping("/create")
-    public StudyRoomModel createStudyRoom(
+    public ResponseEntity<?> createStudyRoom(
             @RequestParam String name,
             @RequestParam String location,
             @RequestParam boolean isBooked,
             @RequestParam int studentId,
             @RequestParam String introduction,
             @RequestParam String image) {
-
-        return studyRoomService.addStudyRoom(name, location, isBooked, studentId, introduction, image);
+        try {
+            StudyRoomModel studyRoom = studyRoomService.addStudyRoom(name, location, isBooked, studentId, introduction, image);
+            return ResponseEntity.ok(studyRoom);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("创建自习室失败: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
-    public StudyRoomModel getStudyRoom(@PathVariable int id) {
-        return studyRoomService.getStudyRoomById(id);
+    public ResponseEntity<?> getStudyRoom(@PathVariable int id) {
+        try {
+            StudyRoomModel studyRoom = studyRoomService.getStudyRoomById(id);
+            return ResponseEntity.ok(studyRoom);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("自习室未找到: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
-    public StudyRoomModel updateStudyRoom(
+    public ResponseEntity<?> updateStudyRoom(
             @PathVariable int id,
             @RequestParam String name,
             @RequestParam String location,
@@ -59,27 +68,57 @@ public class StudyRoomController {
             @RequestParam Integer studentId,
             @RequestParam String introduction,
             @RequestParam String image) {
-
-        return studyRoomService.updateStudyRoom(id, name, location, isBooked, studentId, introduction, image);
+        try {
+            StudyRoomModel studyRoom = studyRoomService.updateStudyRoom(id, name, location, isBooked, studentId, introduction, image);
+            return ResponseEntity.ok(studyRoom);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("更新自习室信息失败: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteStudyRoom(@PathVariable int id) {
-        studyRoomService.deleteStudyRoom(id);
+    public ResponseEntity<?> deleteStudyRoom(@PathVariable int id) {
+        try {
+            studyRoomService.deleteStudyRoom(id);
+            return ResponseEntity.ok(new ErrorResponse("删除自习室成功"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("删除自习室失败: " + e.getMessage()));
+        }
     }
 
     @GetMapping
-    public List<StudyRoomModel> getAllStudyRooms() {
-        return studyRoomService.getAllStudyRooms();
+    public ResponseEntity<?> getAllStudyRooms() {
+        try {
+            List<StudyRoomModel> studyRooms = studyRoomService.getAllStudyRooms();
+            return ResponseEntity.ok(studyRooms);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("获取自习室列表失败: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/reserve/{id}")
-    public ResponseEntity<StudyRoomModel> reserveStudyRoom(@PathVariable int id, @RequestBody ReservationRequest request) {
+    public ResponseEntity<?> reserveStudyRoom(@PathVariable int id, @RequestBody ReservationRequest request) {
         try {
             StudyRoomModel studyRoom = studyRoomService.reserveStudyRoom(id, request.getStudentId());
             return ResponseEntity.ok(studyRoom);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("预订自习室失败: " + e.getMessage()));
+        }
+    }
+
+    static class ErrorResponse {
+        private String message;
+
+        public ErrorResponse(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
         }
     }
 }

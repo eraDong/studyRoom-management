@@ -3,6 +3,7 @@ package com.yxy.studyroomserver.controller;
 import com.yxy.studyroomserver.model.StudentModel;
 import com.yxy.studyroomserver.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,38 +16,61 @@ public class StudentController {
     private StudentService studentService;
 
     @PostMapping("/create")
-    public StudentModel createStudent(
+    public ResponseEntity<?> createStudent(
             @RequestParam String name,
             @RequestParam String username,
             @RequestParam String password,
             @RequestParam boolean isAdmin) {
-
-        return studentService.addStudent(name, username, password, isAdmin);
+        try {
+            StudentModel student = studentService.addStudent(name, username, password, isAdmin);
+            return ResponseEntity.ok(student);
+        } catch (Exception e) {
+            throw new RuntimeException("创建学生失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public StudentModel getStudent(@PathVariable int id) {
-        return studentService.getStudentById(id);
+    public ResponseEntity<?> getStudent(@PathVariable int id) {
+        try {
+            StudentModel student = studentService.getStudentById(id);
+            return ResponseEntity.ok(student);
+        } catch (Exception e) {
+            throw new RuntimeException("学生未找到: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public StudentModel updateStudent(
+    public ResponseEntity<?> updateStudent(
             @PathVariable int id,
             @RequestParam String name,
             @RequestParam String username,
             @RequestParam String password,
             @RequestParam boolean isAdmin) {
-
-        return studentService.updateStudent(id, name, username, password, isAdmin);
+        try {
+            StudentModel student = studentService.updateStudent(id, name, username, password, isAdmin);
+            return ResponseEntity.ok(student);
+        } catch (Exception e) {
+            throw new RuntimeException("更新学生信息失败: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteStudent(@PathVariable int id) {
-        studentService.deleteStudent(id);
+    public ResponseEntity<?> deleteStudent(@PathVariable int id) {
+        try {
+            studentService.deleteStudent(id);
+            return ResponseEntity.ok("删除学生成功");
+        } catch (Exception e) {
+            throw new RuntimeException("删除学生失败: " + e.getMessage());
+        }
     }
 
     @GetMapping
-    public List<StudentModel> getAllStudents() {
-        return studentService.getAllStudents();
+    public ResponseEntity<?> getAllStudents() {
+        try {
+            List<StudentModel> students = studentService.getAllStudents();
+            return ResponseEntity.ok(students);
+        } catch (Exception e) {
+            throw new RuntimeException("获取学生列表失败: " + e.getMessage());
+        }
     }
 }

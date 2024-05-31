@@ -1,11 +1,16 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { getAllStudyRooms, reserveStudyRoom } from '@/api/studyRoom';
 import { getStudentById } from '@/api/student';
 import { useUserStore } from '@/stores/user';
 
 const studyRooms = ref([]);
 const reserveDialogVisible = ref(false);
+const searchQuery = ref('');
+const currentPage = ref(1);
+const pageSize = ref(10);
+const totalRooms = ref(0);
+
 let selectedRoom = reactive({
     id: null,
     name: '',
@@ -26,6 +31,7 @@ const renderStudyRooms = async () => {
         }
     }
     studyRooms.value = roomsData;
+    totalRooms.value = roomsData.data.length;
 };
 
 onMounted(() => {
@@ -47,15 +53,49 @@ const confirmReserve = async () => {
     reserveDialogVisible.value = false;
     await renderStudyRooms();
 };
+
+watch(searchQuery, async (newQuery, oldQuery) => {
+    await renderStudyRooms();
+});
+
+// Computed property for filtered and paginated study rooms
+const filteredStudyRooms = computed(() => {
+    if (!searchQuery.value) {
+        return studyRooms.value.data;
+    }
+    return studyRooms.value.data.filter(room =>
+        room.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+});
+
+const paginatedStudyRooms = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value;
+    const end = start + pageSize.value;
+    return filteredStudyRooms.value? filteredStudyRooms.value.slice(start, end):null;
+});
+
+const handlePageChange = (page) => {
+    currentPage.value = page;
+};
 </script>
+
+
 
 <template>
     <div class="main">
-        <el-table :data="studyRooms.data" border style="width: 100%; height: 660px;">
+        <div class="header">
+            <el-input 
+                v-model="searchQuery"
+                placeholder="搜索自习室"
+                class="search-input"
+            ></el-input>
+        </div>
+
+        <el-table :data="paginatedStudyRooms" border style="width: 100%; height: 445px;">
             <el-table-column prop="name" label="自习室"></el-table-column>
             <el-table-column prop="location" label="位置"></el-table-column>
             <el-table-column prop="booked" label="是否被预约" :formatter="formatIsBooked"></el-table-column>
-            <el-table-column prop="studentName" label="预约人" v-if="true"></el-table-column>
+            <el-table-column prop="studentName" label="预约人"></el-table-column>
             <el-table-column fixed="right" label="操作" width="150">
                 <template #default="scope">
                     <el-button 
@@ -70,6 +110,17 @@ const confirmReserve = async () => {
             </el-table-column>
         </el-table>
 
+        <div class="pagination">
+            <el-pagination
+                background
+                layout="prev, pager, next"
+                :total="totalRooms"
+                :page-size="pageSize"
+                :current-page.sync="currentPage"
+                @current-change="handlePageChange">
+            </el-pagination>
+        </div>
+
         <!-- Reserve Dialog -->
         <el-dialog class="reserveDialog" v-model="reserveDialogVisible" title="确认预约" width="400">
             <div>
@@ -83,13 +134,37 @@ const confirmReserve = async () => {
     </div>
 </template>
 
+
 <style>
 .main {
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .search-input {
+            width: 300px;
+            border-radius: 25px;
+            border: 1px solid #dcdfe6;
+            padding: 10px;
+            transition: all 0.3s ease;
+            
+            &:focus {
+                border-color: #409eff;
+                box-shadow: 0 0 5px rgba(64, 158, 255, 0.5);
+            }
+
+            input {
+                border: none;
+                outline: none;
+            }
+        }
+    }
+
     .el-table {
         border-radius: 15px;
     }
-
-
 
     .el-dialog {
         img {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref,reactive,computed } from 'vue'
+import { ref,reactive,computed, watch } from 'vue'
 import { getAllStudyRooms, deleteStudyRoomById, updateStudyRoom, addStudyRoom } from '@/api/studyRoom'
 
 let studyRoomArr = ref([])
@@ -22,6 +22,7 @@ let pagination = reactive({
     currentPage: 1,
     pageSize: 8
 })
+let searchQuery = ref('')
 
 const studyRoomRender = async () => {
     studyRoomArr.value = await getAllStudyRooms()
@@ -99,15 +100,31 @@ const handleCurrentChange = (currentPage) => {
     pagination.currentPage = currentPage
 }
 
-// Computed property for paginated study rooms
+watch(searchQuery, async (newQuery, oldQuery) => {
+    await studyRoomRender();
+});
+
+// Watcher for search query
+watch(searchQuery, async (newQuery, oldQuery) => {
+    await studyRoomRender();
+});
+
+// Computed property for paginated and filtered study rooms
 const paginatedStudyRooms = computed(() => {
-   
-    
-   const start = (pagination.currentPage - 1) * pagination.pageSize
-   const end = start + pagination.pageSize
-  
-   return studyRoomArr.value.data?studyRoomArr.value.data.slice(start, end):null
-})
+
+const filteredRooms = studyRoomArr.value.data.filter(room =>
+    room.name?.toLowerCase().includes(searchQuery.value.toLowerCase())
+) || [];
+
+const start = (pagination.currentPage - 1) * pagination.pageSize;
+const end = start + pagination.pageSize;
+
+if (!searchQuery.value) {
+    return studyRoomArr.value.data.slice(start,end);
+}
+
+return filteredRooms.slice(start, end);
+});
 </script>
 
 
@@ -115,7 +132,14 @@ const paginatedStudyRooms = computed(() => {
 
 <template>
     <div class="main">
-        <el-button class="add-btn" @click="handleAdd()">增加自习室</el-button>
+        <div class="header">
+            <el-input 
+                v-model="searchQuery"
+                placeholder="搜索自习室"
+                class="search-input"
+            ></el-input>
+            <el-button class="add-btn" @click="handleAdd">添加自习室</el-button>
+        </div>
         <el-row :gutter="20" v-if="total!==0">
             <el-col :span="6" v-for="item in paginatedStudyRooms" :key="item.id">
                 <el-card shadow="always" @click="handleClick(item)">
@@ -202,8 +226,40 @@ const paginatedStudyRooms = computed(() => {
 
 <style lang="less">
 .main {
-    .add-btn {
-        margin-bottom: 10px;
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .search-input {
+            width: 300px;
+            border-radius: 25px;
+            border: 1px solid #dcdfe6;
+            padding: 10px;
+            transition: all 0.3s ease;
+            
+            &:focus {
+                border-color: #409eff;
+                box-shadow: 0 0 5px rgba(64, 158, 255, 0.5);
+            }
+
+            input {
+                border: none;
+                outline: none;
+            }
+        }
+        .add-btn {
+            background-color: #409eff;
+            color: white;
+            border-radius: 25px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background-color: #66b1ff;
+            }
+        }
     }
 
     .el-card {
