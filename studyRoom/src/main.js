@@ -10,10 +10,16 @@ import router from './router'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
+// 持久化
+
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate' 
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
 const app = createApp(App)
 
-app.use(createPinia())
+app.use(pinia)
+
 app.use(router)
 
 app.use(ElementPlus).mount('#app')

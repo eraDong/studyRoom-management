@@ -1,49 +1,60 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getAllStudyRooms, reserveStudyRoom } from '@/api/studyRoom'
+import { ref, reactive, onMounted } from 'vue';
+import { getAllStudyRooms, reserveStudyRoom } from '@/api/studyRoom';
+import { getStudentById } from '@/api/student';
+import { useUserStore } from '@/stores/user';
 
-const studyRooms = ref([])
-const reserveDialogVisible = ref(false)
+const studyRooms = ref([]);
+const reserveDialogVisible = ref(false);
 let selectedRoom = reactive({
     id: null,
     name: '',
     location: '',
     booked: false,
-    studentId: null
-})
+    studentId: null,
+});
 
 const renderStudyRooms = async () => {
-    studyRooms.value = await getAllStudyRooms()
-}
+    const roomsData = await getAllStudyRooms();
+    // 为每个房间增加预约人用户名
+    for (const room of roomsData.data) {
+        if (room.booked) {
+            const studentData = await getStudentById(room.studentId);
+            room.studentName = studentData.data.name;
+        } else {
+            room.studentName = '';
+        }
+    }
+    studyRooms.value = roomsData;
+};
 
 onMounted(() => {
-    renderStudyRooms()
-})
+    renderStudyRooms();
+});
 
 const formatIsBooked = (row, column, cellValue) => {
-    return cellValue ? "已预约" : "空闲"
-}
+    return cellValue ? "已预约" : "空闲";
+};
 
 const handleReserve = (row) => {
-    Object.assign(selectedRoom, row)
-    reserveDialogVisible.value = true
-}
+    Object.assign(selectedRoom, row);
+    reserveDialogVisible.value = true;
+};
 
 const confirmReserve = async () => {
-    // 有登录才能获取id
-    await reserveStudyRoom(selectedRoom.id, { studentId: 1 }) // 123 should be replaced with actual student ID
-    reserveDialogVisible.value = false
-    await renderStudyRooms()
-}
+    const userStore = useUserStore();
+    await reserveStudyRoom(selectedRoom.id, { studentId: userStore.studentId }); // 获取实际的 student ID
+    reserveDialogVisible.value = false;
+    await renderStudyRooms();
+};
 </script>
 
 <template>
     <div class="main">
         <el-table :data="studyRooms.data" border style="width: 100%; height: 660px;">
-            <el-table-column prop="name" label="自习室名称"></el-table-column>
+            <el-table-column prop="name" label="自习室"></el-table-column>
             <el-table-column prop="location" label="位置"></el-table-column>
             <el-table-column prop="booked" label="是否被预约" :formatter="formatIsBooked"></el-table-column>
-            <!-- 登录获取一下预约人 -->
             <el-table-column prop="studentName" label="预约人" v-if="true"></el-table-column>
             <el-table-column fixed="right" label="操作" width="150">
                 <template #default="scope">
@@ -72,13 +83,13 @@ const confirmReserve = async () => {
     </div>
 </template>
 
-
-
 <style>
 .main {
     .el-table {
         border-radius: 15px;
     }
+
+
 
     .el-dialog {
         img {

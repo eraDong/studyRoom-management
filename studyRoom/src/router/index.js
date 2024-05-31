@@ -23,6 +23,16 @@ const router = createRouter({
           name: 'seat',
           component: () => import('../views/seatPage.vue')
         },
+        {
+          path:'/login',
+          name:'login',
+          component:()=>import('../views/loginPage.vue')
+        },
+        {
+          path:'/register',
+          name:'register',
+          component:()=>import('../views/registerPage.vue')
+        }
 
       ],
       component: () => import('../views/layoutContainerPage.vue')
@@ -49,7 +59,8 @@ const router = createRouter({
           component: () => import('../views/manageStudyRoomPage.vue')
         },
       ]
-    }
+    },
+
   ]
 })
 

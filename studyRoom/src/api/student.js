@@ -11,3 +11,6 @@ export const updateStudents = (id, data) =>
 
 export const addStudent = (data) =>
     request.post(`/api/students/create`, data)
+
+export const getStudentById = (id) =>
+    request.get(`/api/students/${id}`)
