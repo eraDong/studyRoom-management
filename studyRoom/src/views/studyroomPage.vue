@@ -82,6 +82,7 @@ const paginatedStudyRooms = computed(() => {
                             <span>{{ item.name }}</span>
                             <div class="bottom clearfix">
                                 <el-tag class="float-right">{{ item.booked ? '已预约' : '未预约' }}</el-tag>
+                                <el-tag>位置：{{ item.location }}</el-tag>
                             </div>
                         </div>
                     </el-card>

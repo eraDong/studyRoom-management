@@ -1,6 +1,7 @@
 <script setup>
 import { ref,reactive,computed, watch } from 'vue'
 import { getAllStudyRooms, deleteStudyRoomById, updateStudyRoom, addStudyRoom } from '@/api/studyRoom'
+import { ElMessage } from 'element-plus';
 
 let studyRoomArr = ref([])
 let imgSrc = ref('')
@@ -65,17 +66,25 @@ const handleEditSave = async () => {
 }
 
 const handleAddSave = async () => {
-    const formData = new FormData()
-    formData.append('name', currentAddItem.value.name || '')
-    formData.append('location', currentAddItem.value.location || '')
-    formData.append('isBooked', currentAddItem.value.booked || false)
-    formData.append('studentId', currentAddItem.value.studentId || 0)
-    formData.append('introduction', currentAddItem.value.introduction || '')
-    formData.append('image', currentAddItem.value.image || '')
-    await addStudyRoom(formData)
-    addDialogVisible.value = false
-    studyRoomRender()
-}
+    // 验证 name 和 location 是否为空
+    if (!currentAddItem.value.name || !currentAddItem.value.location) {
+        ElMessage.error('名称和位置不能为空。请填写完整信息后再保存。');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', currentAddItem.value.name);
+    formData.append('location', currentAddItem.value.location);
+    formData.append('isBooked', currentAddItem.value.booked || false);
+    formData.append('studentId', currentAddItem.value.studentId || 0);
+    formData.append('introduction', currentAddItem.value.introduction || '');
+    formData.append('image', currentAddItem.value.image || '');
+
+    await addStudyRoom(formData);
+    addDialogVisible.value = false;
+    studyRoomRender();
+};
+
 
 const handleFileChange = (event) => {
     const file = event.target.files[0]
@@ -148,6 +157,7 @@ return filteredRooms.slice(start, end);
                         <span>{{ item.name }}</span>
                         <div class="bottom clearfix">
                             <el-tag class="float-right">{{ item.booked ? '已预约' : '未预约' }}</el-tag>
+                            <el-tag>位置：{{ item.location }}</el-tag>
                         </div>
                         <div class="actions">
                             <el-button type="text" @click.stop="handleEdit(item)">编辑</el-button>
