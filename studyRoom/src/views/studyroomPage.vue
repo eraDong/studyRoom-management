@@ -109,7 +109,7 @@ const paginatedStudyRooms = computed(() => {
     </div>
 </template>
 
-<style lang="less">
+<style lang="less" scoped>
 .main {
     .header {
         display: flex;

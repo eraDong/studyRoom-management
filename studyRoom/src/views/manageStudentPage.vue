@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { getAllStudents, deleteStudentById, updateStudents, addStudent } from '@/api/student';
+import { ElMessage } from 'element-plus';
 
 let stuArr = ref({ data: [] });
 let editDialogVisible = ref(false);
@@ -71,12 +72,17 @@ const handleAdd = () => {
 };
 
 const handleAddSave = async () => {
-    const formData = new FormData();
-    formData.append('name', newStudentItem.name || '');
-    formData.append('username', newStudentItem.username || '');
-    formData.append('password', newStudentItem.password || '');
-    formData.append('isAdmin', newStudentItem.admin || false);
+    if (!newStudentItem.name || !newStudentItem.username || !newStudentItem.password) {
+        ElMessage.error('姓名、用户名和密码不能为空');
+        return;
+    }
 
+    const formData = new FormData();
+    formData.append('name', newStudentItem.name);
+    formData.append('username', newStudentItem.username);
+    formData.append('password', newStudentItem.password);
+    formData.append('isAdmin', newStudentItem.admin || false);
+    
     await addStudent(formData);
     addDialogVisible.value = false;
     await renderStudent();

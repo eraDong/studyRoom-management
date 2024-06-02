@@ -88,6 +88,7 @@ const register = async (formEl) => {
 
 <template>
   <div class="register-container">
+    <!-- element-plus -->
     <h1>用户注册</h1>
     <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
       <el-form-item label="姓名" prop="name">

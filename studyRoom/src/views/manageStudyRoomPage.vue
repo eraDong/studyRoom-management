@@ -234,7 +234,7 @@ return filteredRooms.slice(start, end);
 </template>
 
 
-<style lang="less">
+<style lang="less" scoped>
 .main {
     .header {
         display: flex;

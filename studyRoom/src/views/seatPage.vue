@@ -91,6 +91,7 @@ const handlePageChange = (page) => {
             ></el-input>
         </div>
 
+        <!-- element-plus -->
         <el-table :data="paginatedStudyRooms" border style="width: 100%; height: 445px;">
             <el-table-column prop="name" label="自习室"></el-table-column>
             <el-table-column prop="location" label="位置"></el-table-column>
@@ -135,7 +136,7 @@ const handlePageChange = (page) => {
 </template>
 
 
-<style>
+<style lang="less" scoped>
 .main {
     .header {
         display: flex;
