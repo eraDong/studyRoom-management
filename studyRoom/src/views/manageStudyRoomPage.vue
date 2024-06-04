@@ -156,7 +156,7 @@ return filteredRooms.slice(start, end);
                     <div style="padding: 14px;">
                         <span>{{ item.name }}</span>
                         <div class="bottom clearfix">
-                            <el-tag class="float-right">{{ item.booked ? '已预约' : '未预约' }}</el-tag>
+                            <el-tag class="float-right" :type="item.booked ? 'danger' : 'info'">{{ item.booked ? '已预约' : '未预约' }}</el-tag>
                             <el-tag>位置：{{ item.location }}</el-tag>
                         </div>
                         <div class="actions">
@@ -234,7 +234,7 @@ return filteredRooms.slice(start, end);
 </template>
 
 
-<style lang="less" scoped>
+<style lang="less">
 .main {
     .header {
         display: flex;

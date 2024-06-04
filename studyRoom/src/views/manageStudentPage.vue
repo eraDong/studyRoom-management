@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue';
-import { getAllStudents, deleteStudentById, updateStudents, addStudent } from '@/api/student';
-import { ElMessage } from 'element-plus';
+import { getAllStudents, deleteStudentById, updateStudents, addStudent, existsByUsername } from '@/api/student';
+import { ElMessage,ElMessageBox } from 'element-plus';
 
 let stuArr = ref({ data: [] });
 let editDialogVisible = ref(false);
@@ -46,6 +46,11 @@ const handleEdit = (row) => {
 };
 
 const handleEditSave = async () => {
+    if (!currentEditItem.name || !currentEditItem.password) {
+        ElMessage.error('姓名和密码不能为空');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('name', currentEditItem.name || '');
     formData.append('username', currentEditItem.username || '');
@@ -53,14 +58,32 @@ const handleEditSave = async () => {
     formData.append('isAdmin', currentEditItem.admin || false);
     formData.append('studentId', currentEditItem.studentId || 0);
 
-    await updateStudents(currentEditItem.studentId, formData);
-    editDialogVisible.value = false;
-    await renderStudent();
+    try {
+        await updateStudents(currentEditItem.studentId, formData);
+        editDialogVisible.value = false;
+        await renderStudent();
+    } catch (error) {
+        ElMessage.error('更新学生信息失败');
+    }
 };
 
 const handleDelete = async (item) => {
-    await deleteStudentById(item.studentId);
-    await renderStudent();
+    try {
+        await ElMessageBox.confirm(
+            '此操作将永久删除该学生信息, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        );
+        await deleteStudentById(item.studentId);
+        await renderStudent();
+        ElMessage.success('删除成功');
+    } catch (error) {
+        ElMessage.info('已取消删除');
+    }
 };
 
 const handleAdd = () => {
@@ -77,17 +100,49 @@ const handleAddSave = async () => {
         return;
     }
 
+    if (newStudentItem.password.length < 6) {
+        ElMessage.error('密码长度必须至少为6位');
+        return;
+    }
+
+    if (newStudentItem.password.includes(' ')) {
+        ElMessage.error('密码不能包含空格字符');
+        return;
+    }
+
+    const response = await existsByUsername(newStudentItem.username);
+    if (response.data) {
+        ElMessage.error('用户名已存在');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('name', newStudentItem.name);
     formData.append('username', newStudentItem.username);
     formData.append('password', newStudentItem.password);
     formData.append('isAdmin', newStudentItem.admin || false);
-    
-    await addStudent(formData);
-    addDialogVisible.value = false;
-    await renderStudent();
+
+    try {
+        await addStudent(formData);
+        addDialogVisible.value = false;
+        await renderStudent();
+        ElMessage.success('添加成功');
+    } catch (error) {
+        ElMessage.error('添加信息失败');
+    }
 };
 
+watch(addDialogVisible, (newValue, oldValue) => {
+    if (oldValue && !newValue) {
+        ElMessage.info('取消添加');
+    }
+});
+
+watch(editDialogVisible,(newValue,oldValue) => {
+    if(oldValue && !newValue) {
+        ElMessage.info('取消编辑');
+    }
+});
 // Watcher for search query
 watch(searchQuery, async (newQuery, oldQuery) => {
     if (newQuery !== oldQuery) {
@@ -120,7 +175,7 @@ const handlePageChange = (page) => {
 <template>
     <div class="main">
         <div class="header">
-            <el-input 
+            <el-input
                 v-model="searchQuery"
                 placeholder="搜索姓名或用户名"
                 class="search-input"
@@ -161,7 +216,7 @@ const handlePageChange = (page) => {
                     <el-input v-model="currentEditItem.name"></el-input>
                 </el-form-item>
                 <el-form-item label="用户名">
-                    <el-input v-model="currentEditItem.username"></el-input>
+                    <el-input v-model="currentEditItem.username" disabled></el-input>
                 </el-form-item>
                 <el-form-item label="密码">
                     <el-input v-model="currentEditItem.password"></el-input>
@@ -216,7 +271,7 @@ const handlePageChange = (page) => {
             border: 1px solid #dcdfe6;
             padding: 10px;
             transition: all 0.3s ease;
-            
+
             &:focus {
                 border-color: #409eff;
                 box-shadow: 0 0 5px rgba(64, 158, 255, 0.5);
