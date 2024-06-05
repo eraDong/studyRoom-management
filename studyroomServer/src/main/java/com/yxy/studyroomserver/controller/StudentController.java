@@ -73,4 +73,14 @@ public class StudentController {
             throw new RuntimeException("获取学生列表失败: " + e.getMessage());
         }
     }
+
+    @GetMapping("/existsByUsername")
+    public ResponseEntity<?> existsByUsername(@RequestParam String username) {
+        try {
+            boolean exists = studentService.existsByUsername(username);
+            return ResponseEntity.ok(exists);
+        } catch (Exception e) {
+            throw new RuntimeException("查询用户名失败: " + e.getMessage());
+        }
+    }
 }
